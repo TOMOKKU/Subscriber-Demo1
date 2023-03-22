@@ -1,0 +1,143 @@
+<%# <div class="page-title">
+    <h2>MAYUMAP</h2>
+</div> %>
+
+
+<div class="mayumap">
+    <%# ----CONTEXT---- %>
+    <%= render 'buses/context'%>
+
+    <!-- <button id="test" onclick="autoForLoopMoving()" style="font-size: 20px; margin: 1rem">test</button> 
+-->
+    <div class="map" id="mapid" style="width: 100%; height: 100%;"></div>
+</div>
+
+<script type="text/javascript">
+//test
+/* const flaskdjfalsdkjf = [36.4091, 139.3134];
+const d = 0.00001;
+let MyLat, MyLng;
+MyLat = flaskdjfalsdkjf[0];
+MyLng = flaskdjfalsdkjf[1]; */
+
+var mymap = L.map('mapid').setView([36.4091, 139.3134], 15);
+var mark = null;
+// OpenStreetMapのタイルレイヤーを作る
+var tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution: '© <a href="http://osm.org/copyright">OpenStreetMap</a> contributors, <a 
+href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
+    maxZoom: 19
+});
+tileLayer.addTo(mymap);
+
+//test
+
+
+/* function onAutoMoveMarker() {
+    if (mark !== null) {
+        mymap.removeLayer(mark);
+    }
+    let mark1 = L.marker([MyLat, MyLng]);
+    mark = mark1.addTo(mymap).bindPopup(`経度: ${mark1._latlng.lat}, 緯度: ${mark1._latlng.lng}`);
+    mark.on('mouseover', (e) => this.openPopup());
+    console.log("%f, %f",mark1._latlng.lat, mark1._latlng.lng);
+    MyLat += d;
+    MyLng += d;
+}
+function autoForLoopMoving() {
+    
+    setInterval(onAutoMoveMarker, 10);
+    
+} */
+//endtest
+
+client = new Paho.MQTT.Client("driver.cloudmqtt.com", [port-number], "web_" + parseInt(Math.random() * 
+1000, 10));
+
+client.onConnectionLost = onConnectionLost;
+client.onMessageArrived = onMessageArrived;
+var options = {
+    useSSL: true,
+    userName: "",
+    password: "",
+    onSuccess:onConnect,
+    onFailure:doFail
+}
+
+client.connect(options);
+
+function onConnect() {
+    // Once a connection has been made, make a subscription and send a message.
+    console.log("onConnect");
+    client.subscribe("test");
+    message = new Paho.MQTT.Message("Hello CloudMQTT");
+    message.destinationName = "test ";
+    client.send(message);
+}
+
+function doFail(e){
+    console.log(e);
+}
+
+// called when the client loses its connection
+function onConnectionLost(responseObject) {
+    if (responseObject.errorCode !== 0) {
+        console.log("onConnectionLost:"+responseObject.errorMessage);
+    }
+}
+
+// called when a message arrives
+
+function MarkerTreate(busid, lat, lng, people) {
+    mymap.removeLayer(mark);
+    let LocalMark = L.marker([lat, lng]);
+    mark = LocalMark.addTo(mymap).bindPopup(people);
+    markers[busid] = mark;
+}
+
+var markers = new Array();
+
+function onMessageArrived(message) {
+    console.log("onMessageArrived:"+message.payloadString);
+    //one
+    //var str = message.payloadString;
+    //var msg = str.split(", ");
+    //var lat = parseFloat(msg[0]);
+    //var lng = parseFloat(msg[1]);
+    //var people = msg[2];
+    // busidを用いて複数のマーカーを処理できるようにする
+
+    //if (mark !== null) {
+    //    mymap.removeLayer(mark);
+    //}
+
+    //let LocalMark = L.marker([lat, lng]);
+    //mark = LocalMark.addTo(mymap).bindPopup(people);
+
+
+    //more
+    var str = message.payloadString;
+    var msg = str.split(", ");
+    var lat = parseFloat(msg[0]);
+    var lng = parseFloat(msg[1]);
+    var people = msg[2];
+    var busid = msg[3];
+
+    markers.forEach(marker => {
+        if (Object.id(marker.id, busid)) {
+            MarkerTreate(busid, lat, lng, people);
+        }
+    });
+
+    //markers.forEach(marker => {
+    //    if (Object.is(marker.id, busid)) {
+    //        mymap.removeLayer(marker);
+    //    }
+    //});
+    //let LocalMark = L.marker([lat,lng]);
+    //mark = LocalMark.addTo(mymap).bingPopup(people);
+    //markers[busid] = mark;
+
+}
+
+</script> 
